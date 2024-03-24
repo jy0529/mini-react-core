@@ -25,6 +25,7 @@ module.exports = {
     plugins: ['@typescript-eslint', 'prettier'],
     rules: {
         '@typescript-eslint/no-explicit-any': 'off',
-        'no-constant-condition': 'off'
+        'no-constant-condition': 'off',
+        '@typescript-eslint/ban-ts-comment': 'off'
     }
 };

@@ -1,4 +1,4 @@
-import { ReactElement, ReactElementProps, ReactKeyType } from 'shared';
+import { ReactElement, ReactElementProps, ReactKeyType } from 'react-shared';
 import { FunctionComponent, HostComponent, WorkTag } from './ReactWorkTags';
 import { NoFlags, ReactFlags } from './ReactFiberFlags';
 
@@ -20,6 +20,7 @@ export class FiberNode {
     flags: ReactFlags;
     subtreeFlags: ReactFlags;
     updateQueue: unknown;
+    deletions: FiberNode[] | null;
 
     constructor(tag: WorkTag, pendingProps: ReactElementProps, key: ReactKeyType) {
         this.tag = tag;
@@ -40,6 +41,7 @@ export class FiberNode {
         this.flags = NoFlags;
         this.subtreeFlags = NoFlags;
         this.updateQueue = null;
+        this.deletions = null;
     }
 }
 
@@ -48,9 +50,12 @@ export const createWorkInProgress = (current: FiberNode, pendingProps: ReactElem
     if (wip === null) {
         wip = new FiberNode(current.tag, pendingProps, current.key);
         wip.stateNode = current.stateNode;
+        wip.alternative = current;
+        current.alternative = wip;
     } else {
         wip.pendingProps = pendingProps;
         wip.flags = NoFlags;
+        wip.deletions = null;
     }
     wip.type = current.type;
     wip.updateQueue = current.updateQueue;

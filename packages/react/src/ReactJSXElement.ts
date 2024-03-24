@@ -6,7 +6,7 @@ import {
     REACT_SYMBOL_ELEMENT_TYPE
 } from 'react-shared';
 
-function ReactElement(type: ReactElementType, key: any, props: ReactElementProps): ReactElement {
+function createReactElement(type: ReactElementType, key: any, props: ReactElementProps): ReactElement {
     return {
         $$typeof: REACT_SYMBOL_ELEMENT_TYPE,
         type,
@@ -29,7 +29,7 @@ export const jsxProd = (type: ReactElementType, config: ReactElementConfig, mayb
         }
     }
 
-    return ReactElement(type, key, props);
+    return createReactElement(type, key, props);
 };
 
-export const jsxDev = jsxProd;
+export const jsxDEV = jsxProd;

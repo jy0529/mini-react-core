@@ -1,6 +1,8 @@
 import { beginWork } from './ReactBeginWork';
+import { commitMutationEffect } from './ReactCommitRoot';
 import { completeWork } from './ReactCompleteWork';
 import { FiberNode, createWorkInProgress } from './ReactFiber';
+import { MutationMask, NoFlags } from './ReactFiberFlags';
 import { FiberRoot } from './ReactFiberRoot';
 import { HostRoot } from './ReactWorkTags';
 
@@ -39,6 +41,9 @@ export function renderRoot(root: FiberRoot) {
             console.error(error);
         }
     } while (true);
+    const finishedWork = root.current.alternative;
+    root.finishedWork = finishedWork;
+    commitRoot(root);
 }
 
 export function workLoop() {
@@ -71,4 +76,32 @@ function completeUnitOfWork(unitOfWork: FiberNode) {
         node = node.return;
         workInProgress = node;
     } while (node !== null);
+}
+
+function commitRoot(root: FiberRoot) {
+    const finishedWork = root.finishedWork;
+    if (finishedWork === null) {
+        return;
+    }
+
+    if (__DEV__) {
+        console.warn('commit 阶段开始', finishedWork);
+    }
+
+    // reset
+    root.finishedWork = null;
+
+    // 检查是否需要更新 subtreeFlags flags
+    const subtreeHasEffect = (finishedWork.subtreeFlags & MutationMask) !== NoFlags;
+    const rootHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
+
+    if (subtreeHasEffect || rootHasEffect) {
+        // beforeMutation
+        // mutation Placement
+        commitMutationEffect(finishedWork);
+        root.current = finishedWork;
+        // layout
+    } else {
+        root.current = finishedWork;
+    }
 }

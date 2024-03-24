@@ -1,7 +1,11 @@
 import { Container, appendInitialChildren, createInstance, createTextInstance } from 'hostConfig';
 import { FiberNode } from './ReactFiber';
-import { HostComponent, HostRoot, HostText } from './ReactWorkTags';
-import { NoFlags } from './ReactFiberFlags';
+import { FunctionComponent, HostComponent, HostRoot, HostText } from './ReactWorkTags';
+import { NoFlags, Update } from './ReactFiberFlags';
+
+function markUpdate(fiberNode: FiberNode) {
+    fiberNode.flags |= Update;
+}
 
 export const completeWork = (wip: FiberNode) => {
     const { tag, alternative } = wip;
@@ -13,7 +17,7 @@ export const completeWork = (wip: FiberNode) => {
                 // TODO
             } else {
                 // 1. 创建节点
-                const instance = createInstance(wip.type, wip.pendingProps);
+                const instance = createInstance(wip.type);
                 // 2. 添加 children
                 appendAllChildren(instance, wip);
                 wip.stateNode = instance;
@@ -24,7 +28,12 @@ export const completeWork = (wip: FiberNode) => {
         case HostText: {
             // mount 时构建离屏的 DOM 树
             if (alternative !== null && wip.stateNode) {
-                // TODO
+                // update
+                const oldText = alternative.memorizedProps.content;
+                const newText = wip.memorizedProps.content;
+                if (oldText !== newText) {
+                    markUpdate(wip);
+                }
             } else {
                 // 1. 创建节点
                 const instance = createTextInstance(wip.pendingProps.content);
@@ -34,6 +43,10 @@ export const completeWork = (wip: FiberNode) => {
             break;
         }
         case HostRoot: {
+            bubbleProperties(wip);
+            break;
+        }
+        case FunctionComponent: {
             bubbleProperties(wip);
             break;
         }

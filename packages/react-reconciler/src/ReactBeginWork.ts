@@ -1,8 +1,9 @@
-import { ReactElement } from 'shared';
+import { ReactElement } from 'react-shared';
 import { FiberNode } from './ReactFiber';
 import { UpdateQueue, processUpdateQueue } from './ReactFiberUpdateQueue';
-import { HostComponent, HostRoot, HostText } from './ReactWorkTags';
+import { FunctionComponent, HostComponent, HostRoot, HostText } from './ReactWorkTags';
 import { mountChildrenFibers, reconcileChildrenFibers } from './ReactChildFiber';
+import { renderWithHooks } from './ReactFiberHook';
 
 export const beginWork = (wip: FiberNode): FiberNode | null => {
     switch (wip.tag) {
@@ -12,6 +13,8 @@ export const beginWork = (wip: FiberNode): FiberNode | null => {
             return updateHostComponent(wip);
         case HostText:
             return null;
+        case FunctionComponent:
+            return updateFunctionComponent(wip);
         default: {
             if (__DEV__) {
                 console.warn('unexpected tag: ' + wip.tag);
@@ -44,6 +47,12 @@ function updateHostComponent(wip: FiberNode): FiberNode | null {
     const nextChildren = pendingProps.children;
     reconcileChildren(wip, nextChildren);
 
+    return wip.child;
+}
+
+function updateFunctionComponent(wip: FiberNode): FiberNode | null {
+    const nextChildren = renderWithHooks(wip);
+    reconcileChildren(wip, nextChildren);
     return wip.child;
 }
 

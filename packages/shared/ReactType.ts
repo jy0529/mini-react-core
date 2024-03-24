@@ -5,6 +5,8 @@ export type ReactKeyType = any;
 
 export const REACT_SYMBOL_ELEMENT_TYPE = Symbol.for('react.symbol');
 
+export type Action<State> = State | ((prevState: State) => State);
+
 export type ReactElement = {
     $$typeof: symbol | number;
     type: ReactElementType;

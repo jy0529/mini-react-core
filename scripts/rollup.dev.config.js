@@ -1,28 +1,15 @@
-import fs from 'fs';
-import path from 'path';
-
-import cjs from 'rollup-plugin-commonjs';
-import replace from 'rollup-plugin-replace';
+import cjs from '@rollup/plugin-commonjs';
+import replace from '@rollup/plugin-replace';
 import typescript from 'rollup-plugin-typescript2';
-
-const getPkgPath = (name) => {
-    return path.resolve(__dirname, `../packages/${name}`);
-};
-
-const getDistPath = (name) => {
-    return path.resolve(__dirname, `../dist/${name}`);
-};
-
-const getPkgJson = (name) => {
-    const path = `${getPkgPath(name)}/package.json`;
-    const str = fs.readFileSync(path, { encoding: 'utf-8' });
-    return JSON.parse(str);
-};
+import alias from '@rollup/plugin-alias';
+import { getDistPath, getPkgJson, getPkgPath } from './utils';
 
 const reactPkg = getPkgJson('react');
+const reactDomPkg = getPkgJson('react-dom');
 
-const alias = {
-    __DEV__: true
+const replaceVars = {
+    __DEV__: true,
+    preventAssignment: true
 };
 
 const config = [
@@ -33,7 +20,7 @@ const config = [
             file: `${getDistPath('react')}/${reactPkg.main}`,
             format: 'umd'
         },
-        plugins: [replace(alias), cjs(), typescript()]
+        plugins: [replace(replaceVars), cjs(), typescript()]
     },
     {
         input: `${getPkgPath('react')}/src/ReactJSXElement.ts`,
@@ -49,7 +36,34 @@ const config = [
                 format: 'umd'
             }
         ],
-        plugins: [replace(alias), cjs(), typescript()]
+        plugins: [replace(replaceVars), cjs(), typescript()]
+    },
+    // react-dom
+    {
+        input: `${getPkgPath('react-dom')}/${reactDomPkg.module}`,
+        output: [
+            {
+                name: 'ReactDom',
+                file: `${getDistPath('react-dom')}/index.js`,
+                format: 'umd'
+            },
+            {
+                name: 'ReactDomClient',
+                file: `${getDistPath('react-dom')}/client.js`,
+                format: 'umd'
+            }
+        ],
+        external: [...Object.keys(reactDomPkg.peerDependencies)],
+        plugins: [
+            alias({
+                entries: {
+                    hostConfig: `${getPkgPath('react-dom')}/src/hostConfig.ts`
+                }
+            }),
+            replace(replaceVars),
+            cjs(),
+            typescript()
+        ]
     }
 ];
 
