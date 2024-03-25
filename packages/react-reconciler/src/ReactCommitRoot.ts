@@ -1,6 +1,6 @@
-import { Container, appendChildToContainer } from 'hostConfig';
+import { Container, appendChildToContainer, commitUpdate, deleteChild } from 'hostConfig';
 import { FiberNode } from './ReactFiber';
-import { MutationMask, NoFlags, Placement } from './ReactFiberFlags';
+import { ChildDeletion, MutationMask, NoFlags, Placement, Update } from './ReactFiberFlags';
 import { HostComponent, HostRoot, HostText } from './ReactWorkTags';
 import { FiberRoot } from './ReactFiberRoot';
 
@@ -32,7 +32,20 @@ function commitMutationEffectsOnFiber(finishedWork: FiberNode) {
         finishedWork.flags &= ~Placement;
     }
     // update
+    if ((flags & Update) !== NoFlags) {
+        commitUpdate(finishedWork);
+        finishedWork.flags &= ~Update;
+    }
+
     // childDeletion
+    if ((flags & ChildDeletion) !== NoFlags) {
+        if (finishedWork.deletions !== null) {
+            finishedWork.deletions.forEach((childToDelete) => {
+                commitChildDeletion(childToDelete);
+            });
+        }
+        finishedWork.flags &= ~ChildDeletion;
+    }
 }
 
 function commitPlacement(finishedWork: FiberNode) {
@@ -77,5 +90,64 @@ function appendPlacementNodeIntoContainer(finishedWork: FiberNode, hostParent: C
             appendPlacementNodeIntoContainer(sibling, hostParent);
             sibling = sibling.sibling;
         }
+    }
+}
+
+function commitChildDeletion(childToDelete: FiberNode) {
+    let rootChildrenToDelete: FiberNode | null = null;
+    commitNestChildDeletion(childToDelete, (unmountFiber: FiberNode) => {
+        switch (unmountFiber.tag) {
+            case HostComponent: {
+                if (rootChildrenToDelete === null) {
+                    rootChildrenToDelete = unmountFiber;
+                }
+                break;
+            }
+            case HostText: {
+                if (rootChildrenToDelete === null) {
+                    rootChildrenToDelete = unmountFiber;
+                }
+                break;
+            }
+            default: {
+                if (__DEV__) {
+                    console.warn('未识别的 unmount fiber tag', unmountFiber.tag);
+                }
+            }
+        }
+    });
+    if (rootChildrenToDelete !== null) {
+        const parent = getHostParent(rootChildrenToDelete);
+        if (parent !== null) {
+            deleteChild((rootChildrenToDelete as FiberNode).stateNode, parent);
+        }
+    }
+    childToDelete.return = null;
+    childToDelete.child = null;
+}
+
+function commitNestChildDeletion(node: FiberNode, onCommitUnmount: (fiberNode: FiberNode) => void) {
+    let current = node;
+
+    while (true) {
+        onCommitUnmount(current);
+        if (current.child) {
+            current.child.return = current;
+            current = current.child;
+            continue;
+        }
+
+        if (current === node) {
+            return;
+        }
+
+        while (current.sibling === null) {
+            if (current.return === null || current === node) {
+                return;
+            }
+            current = current.return;
+        }
+        current.sibling.return = current.return;
+        current = current.sibling;
     }
 }
