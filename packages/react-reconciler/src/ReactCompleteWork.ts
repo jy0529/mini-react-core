@@ -2,22 +2,23 @@ import { Container, appendInitialChildren, createInstance, createTextInstance } 
 import { FiberNode } from './ReactFiber';
 import { FunctionComponent, HostComponent, HostRoot, HostText } from './ReactWorkTags';
 import { NoFlags, Update } from './ReactFiberFlags';
+import { updateFiberProps } from 'react-dom/src/events';
 
 function markUpdate(fiberNode: FiberNode) {
     fiberNode.flags |= Update;
 }
 
 export const completeWork = (wip: FiberNode) => {
-    const { tag, alternative } = wip;
+    const { tag, alternative, pendingProps } = wip;
 
     switch (tag) {
         case HostComponent: {
-            // mount 时构建离屏的 DOM 树
             if (alternative !== null && wip.stateNode) {
-                // TODO
+                updateFiberProps(wip.stateNode, pendingProps);
             } else {
+                // mount 时构建离屏的 DOM 树
                 // 1. 创建节点
-                const instance = createInstance(wip.type);
+                const instance = createInstance(wip.type, pendingProps);
                 // 2. 添加 children
                 appendAllChildren(instance, wip);
                 wip.stateNode = instance;

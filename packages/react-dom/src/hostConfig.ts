@@ -1,13 +1,16 @@
 import { FiberNode } from 'react-reconciler/src/ReactFiber';
 import { HostText, WorkTag } from 'react-reconciler/src/ReactWorkTags';
+import { ReactElementProps } from 'shared';
+import { DOMElement, updateFiberProps } from './events';
 
 export type Container = Element;
 export type Instance = Element;
 
-export const createInstance = (type: string): Instance => {
-    // TODO props
-    const element = document.createElement(type);
-    return element;
+export const createInstance = (type: string, props: ReactElementProps): Instance => {
+    const element = document.createElement(type) as unknown;
+    updateFiberProps(element as DOMElement, props);
+
+    return element as DOMElement;
 };
 
 export const appendInitialChildren = (parent: Instance | Container, child: Instance) => {

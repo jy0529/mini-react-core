@@ -9,8 +9,7 @@ const App = () => (
 
 const HelloWorld = () => {
     const [num, setNum] = useState(100);
-    window.setNum = setNum;
-    return num === 3 ? <span>HelloA</span> : <span>{num}</span>;
+    return <span onClick={() => setNum(num + 1)}>{num}</span>;
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
