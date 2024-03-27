@@ -17,29 +17,44 @@ function ChildFiberReconciler(shouldTrackEffects: boolean) {
         }
     }
 
+    function deleteRemainingChildren(returnFiber: FiberNode, childToDelete: FiberNode | null) {
+        if (childToDelete === null || shouldTrackEffects === false) {
+            return;
+        }
+        while (childToDelete !== null) {
+            deleteChild(returnFiber, childToDelete);
+            childToDelete = childToDelete.sibling;
+        }
+    }
+
     function reconcileSingleElement(returnFiber: FiberNode, currentFiber: FiberNode | null, element: ReactElement) {
         const key = element.key;
 
-        work: if (currentFiber !== null) {
+        while (currentFiber !== null) {
             if (key === currentFiber.key) {
                 if (element.$$typeof === REACT_SYMBOL_ELEMENT_TYPE) {
                     if (element.type === currentFiber.type) {
                         // reuse
                         const existing = useFiber(currentFiber, element.props);
                         existing.return = returnFiber;
+                        // 删除剩下所有 sibling
+                        deleteRemainingChildren(returnFiber, currentFiber.sibling);
                         return existing;
                     }
-                    deleteChild(returnFiber, currentFiber);
-                    break work;
+                    // key 相同、type 不一样
+                    deleteRemainingChildren(returnFiber, currentFiber);
+                    break;
                 } else {
                     if (__DEV__) {
                         console.warn('未定义的 react element 类型', element.type);
-                        break work;
+                        break;
                     }
                 }
             } else {
+                // key 不同、type 不同
                 // delete
                 deleteChild(returnFiber, currentFiber);
+                currentFiber = currentFiber.sibling;
             }
         }
 
@@ -50,13 +65,15 @@ function ChildFiberReconciler(shouldTrackEffects: boolean) {
     }
 
     function reconcileSingleTextNode(returnFiber: FiberNode, currentFiber: FiberNode | null, content: string | number) {
-        if (currentFiber !== null) {
+        while (currentFiber !== null) {
             if (currentFiber.tag === HostText) {
                 const existing = useFiber(currentFiber, { content });
                 existing.return = returnFiber;
+                deleteRemainingChildren(returnFiber, currentFiber.sibling);
                 return existing;
             }
             deleteChild(returnFiber, currentFiber);
+            currentFiber = currentFiber.sibling;
         }
 
         // create
