@@ -48,3 +48,7 @@ function commitTextUpdate(node: Instance, content: string) {
 export const deleteChild = (node: Instance, parent: Container) => {
     parent.removeChild(node);
 };
+
+export const insertChildToContainer = (child: Instance, container: Container, before: Instance) => {
+    container.insertBefore(child, before);
+};
