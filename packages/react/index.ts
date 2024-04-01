@@ -1,4 +1,4 @@
-import { jsxDEV as jsx } from './src/ReactJSXElement';
+import { Fragment as _Fragment, jsxDEV as jsx } from './src/ReactJSXElement';
 import { Dispatcher, resolveDispatcher } from './src/currentDispatcher';
 import currentDispatcher from './src/currentDispatcher';
 export const config = {
@@ -7,6 +7,8 @@ export const config = {
 export const version = config.version;
 
 export const jsxDEV = jsx;
+
+export const Fragment = _Fragment;
 
 export const useState: Dispatcher['useState'] = (initialState) => {
     const dispatcher = resolveDispatcher();

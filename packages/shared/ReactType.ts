@@ -3,7 +3,8 @@ export type ReactElementConfig = object;
 export type ReactElementProps = any;
 export type ReactKeyType = any;
 
-export const REACT_SYMBOL_ELEMENT_TYPE = Symbol.for('react.symbol');
+export const REACT_SYMBOL_ELEMENT_TYPE = Symbol.for('react.symbol.element');
+export const REACT_SYMBOL_FRAGMENT_TYPE = Symbol.for('react.symbol.fragment');
 
 export type Action<State> = State | ((prevState: State) => State);
 

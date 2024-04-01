@@ -1,6 +1,6 @@
 import { Container, appendInitialChildren, createInstance, createTextInstance } from 'hostConfig';
 import { FiberNode } from './ReactFiber';
-import { FunctionComponent, HostComponent, HostRoot, HostText } from './ReactWorkTags';
+import { Fragment, FunctionComponent, HostComponent, HostRoot, HostText } from './ReactWorkTags';
 import { NoFlags, Update } from './ReactFiberFlags';
 import { updateFiberProps } from 'react-dom/src/events';
 
@@ -43,10 +43,8 @@ export const completeWork = (wip: FiberNode) => {
             bubbleProperties(wip);
             break;
         }
-        case HostRoot: {
-            bubbleProperties(wip);
-            break;
-        }
+        case HostRoot:
+        case Fragment:
         case FunctionComponent: {
             bubbleProperties(wip);
             break;

@@ -3,7 +3,8 @@ import {
     ReactElementProps,
     ReactElementType,
     ReactElement,
-    REACT_SYMBOL_ELEMENT_TYPE
+    REACT_SYMBOL_ELEMENT_TYPE,
+    REACT_SYMBOL_FRAGMENT_TYPE
 } from 'react-shared';
 
 function createReactElement(type: ReactElementType, key: any, props: ReactElementProps): ReactElement {
@@ -33,3 +34,5 @@ export const jsxProd = (type: ReactElementType, config: ReactElementConfig, mayb
 };
 
 export const jsxDEV = jsxProd;
+
+export const Fragment = REACT_SYMBOL_FRAGMENT_TYPE;

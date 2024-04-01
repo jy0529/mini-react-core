@@ -140,20 +140,31 @@ function insertOrAppendPlacementNodeIntoContainer(finishedWork: FiberNode, hostP
     }
 }
 
+function recordHostChildrenToDelete(childrenToDelete: FiberNode[], unmountFiber: FiberNode) {
+    const lastOne = childrenToDelete[childrenToDelete.length - 1];
+    if (!lastOne) {
+        childrenToDelete.push(unmountFiber);
+    } else {
+        let node = lastOne.sibling;
+        while (node !== null) {
+            if (unmountFiber === node) {
+                childrenToDelete.push(unmountFiber);
+            }
+            node = node.sibling;
+        }
+    }
+}
+
 function commitChildDeletion(childToDelete: FiberNode) {
-    let rootChildrenToDelete: FiberNode | null = null;
+    const rootChildrenToDelete: FiberNode[] = [];
     commitNestChildDeletion(childToDelete, (unmountFiber: FiberNode) => {
         switch (unmountFiber.tag) {
             case HostComponent: {
-                if (rootChildrenToDelete === null) {
-                    rootChildrenToDelete = unmountFiber;
-                }
+                recordHostChildrenToDelete(rootChildrenToDelete, unmountFiber);
                 break;
             }
             case HostText: {
-                if (rootChildrenToDelete === null) {
-                    rootChildrenToDelete = unmountFiber;
-                }
+                recordHostChildrenToDelete(rootChildrenToDelete, unmountFiber);
                 break;
             }
             default: {
@@ -163,10 +174,12 @@ function commitChildDeletion(childToDelete: FiberNode) {
             }
         }
     });
-    if (rootChildrenToDelete !== null) {
-        const parent = getHostParent(rootChildrenToDelete);
+    if (rootChildrenToDelete.length !== 0) {
+        const parent = getHostParent(childToDelete);
         if (parent !== null) {
-            deleteChild((rootChildrenToDelete as FiberNode).stateNode, parent);
+            rootChildrenToDelete.forEach((childToDelete) => {
+                deleteChild((childToDelete as FiberNode).stateNode, parent);
+            });
         }
     }
     childToDelete.return = null;
