@@ -9,7 +9,17 @@ const App = () => (
 
 const HelloWorld = () => {
     const [num, setNum] = useState(100);
-    return <span onClick={() => setNum(num + 1)}>{num}</span>;
+    return (
+        <span
+            onClick={() => {
+                setNum((num) => num + 1);
+                setNum((num) => num + 1);
+                setNum((num) => num + 1);
+            }}
+        >
+            {num}
+        </span>
+    );
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<App />);

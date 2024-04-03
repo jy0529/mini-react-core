@@ -4,17 +4,18 @@ import { UpdateQueue, processUpdateQueue } from './ReactFiberUpdateQueue';
 import { Fragment, FunctionComponent, HostComponent, HostRoot, HostText } from './ReactWorkTags';
 import { mountChildrenFibers, reconcileChildrenFibers } from './ReactChildFiber';
 import { renderWithHooks } from './ReactFiberHook';
+import { Lane } from './ReactFiberLanes';
 
-export const beginWork = (wip: FiberNode): FiberNode | null => {
+export const beginWork = (wip: FiberNode, renderLane: Lane): FiberNode | null => {
     switch (wip.tag) {
         case HostRoot:
-            return updateHostRoot(wip);
+            return updateHostRoot(wip, renderLane);
         case HostComponent:
             return updateHostComponent(wip);
         case HostText:
             return null;
         case FunctionComponent:
-            return updateFunctionComponent(wip);
+            return updateFunctionComponent(wip, renderLane);
         case Fragment:
             return updateFragment(wip);
         default: {
@@ -26,7 +27,7 @@ export const beginWork = (wip: FiberNode): FiberNode | null => {
     }
 };
 
-function updateHostRoot(wip: FiberNode): FiberNode | null {
+function updateHostRoot(wip: FiberNode, renderLane: Lane): FiberNode | null {
     // 1. update state
     const baseState = wip.memorizedState;
     const updateQueue = wip.updateQueue as UpdateQueue<ReactElement>;
@@ -34,7 +35,7 @@ function updateHostRoot(wip: FiberNode): FiberNode | null {
     const pendingUpdate = updateQueue.shared.pending;
     updateQueue.shared.pending = null;
 
-    const { memorizedState } = processUpdateQueue(baseState, pendingUpdate);
+    const { memorizedState } = processUpdateQueue(baseState, pendingUpdate, renderLane);
     wip.memorizedState = memorizedState;
 
     // reconcile children
@@ -52,8 +53,8 @@ function updateHostComponent(wip: FiberNode): FiberNode | null {
     return wip.child;
 }
 
-function updateFunctionComponent(wip: FiberNode): FiberNode | null {
-    const nextChildren = renderWithHooks(wip);
+function updateFunctionComponent(wip: FiberNode, renderLane: Lane): FiberNode | null {
+    const nextChildren = renderWithHooks(wip, renderLane);
     reconcileChildren(wip, nextChildren);
     return wip.child;
 }

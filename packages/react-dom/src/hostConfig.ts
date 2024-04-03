@@ -52,3 +52,10 @@ export const deleteChild = (node: Instance, parent: Container) => {
 export const insertChildToContainer = (child: Instance, container: Container, before: Instance) => {
     container.insertBefore(child, before);
 };
+
+export const scheduleMicroTask =
+    typeof queueMicrotask === 'function'
+        ? queueMicrotask
+        : (callback: () => void) => {
+              Promise.resolve().then(callback);
+          };
